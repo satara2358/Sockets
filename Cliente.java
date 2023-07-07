@@ -5,13 +5,17 @@ import java.awt.event.ActionListener;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.TreeSet;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -34,14 +38,17 @@ class MarcoCliente extends JFrame{
 	}
 	
 }
- class LaminaCliente extends JPanel{
+ class LaminaCliente extends JPanel implements Runnable{
 	 
-	 private JTextField campo1, nick, ip;
+	 private JTextField campo1, ip;
+	 private JLabel nick;
 	 private JTextArea chat;
 	 private JButton boton;
 	 
 	 public LaminaCliente() {
-		 nick = new JTextField(5);
+		 String nickName = JOptionPane.showInputDialog("Nick: ");
+		 nick = new JLabel();
+		 nick.setText(nickName);
 		 add(nick);
 		 JLabel text = new JLabel("CLIENTE");
 		 add(text);
@@ -54,7 +61,9 @@ class MarcoCliente extends JFrame{
 		 boton = new JButton("Enviar");
 		 EnviarTexto evento = new EnviarTexto();
 		 boton.addActionListener(evento);
-		 add(boton);	 
+		 add(boton);	
+		 Thread hilo = new Thread(this);
+		 hilo.start();
 	 }
 	 
 	 private class EnviarTexto implements ActionListener{
@@ -62,6 +71,7 @@ class MarcoCliente extends JFrame{
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			// TODO Auto-generated method stub
+			chat.append("\n" + campo1.getText());
 			try {
 				Socket socketC = new Socket("192.168.100.115",3000);
 				//DataOutputStream flujoSalida = new DataOutputStream(socketC.getOutputStream());
@@ -82,6 +92,27 @@ class MarcoCliente extends JFrame{
 			}	
 		}	 
 	 }
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		try {
+			ServerSocket serverCliente = new ServerSocket(3300);
+			Socket cliente;
+			
+			Envio paqueteRecibido;
+			while (true) {
+				cliente = serverCliente.accept();
+				ObjectInputStream flujoEntrada = new ObjectInputStream(cliente.getInputStream());
+				paqueteRecibido =  (Envio) flujoEntrada.readObject();
+				chat.append("\n "+paqueteRecibido.getNick()+ ": "+ paqueteRecibido.getMensaje());
+			}
+			
+		}catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+	}
  }
  
  class Envio implements Serializable{

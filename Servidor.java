@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.*;
 
 import javax.swing.JFrame;
@@ -56,6 +57,11 @@ class MarcoServidor extends JFrame implements Runnable{
 				//String Mtext = flujo.readUTF();
 				//areadeT.append("\n"+ Mtext);
 				areadeT.append("\n"+nick+" : "+mensaje+" : "+ip);
+				Socket sendDestinatario = new Socket(ip,3300);
+				ObjectOutputStream reenvio = new ObjectOutputStream(sendDestinatario.getOutputStream());
+				reenvio.writeObject(recibido);
+				reenvio.close();
+				sendDestinatario.close();
 				socketA.close();
 			}
 			
